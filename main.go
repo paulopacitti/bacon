@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bacon/cmd"
+	"github.com/paulopacitti/bacon/cmd"
 )
 
 func main() {

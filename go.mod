@@ -1,4 +1,4 @@
-module bacon
+module github.com/paulopacitti/bacon
 
 go 1.21.6
 
