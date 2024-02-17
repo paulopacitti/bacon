@@ -42,7 +42,7 @@ type ResponsePorkbun struct {
 
 var updateCmd = &cobra.Command{
 	Use:   "update",
-	Short: "Updates IP for the domain configured in the .bacon.json.",
+	Short: "Gets public IP and update for the domain configured in \"$HOME/.config/bacon/config.json\"",
 	Run:   runUpdate,
 }
 
