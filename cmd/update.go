@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	PorkbunAPIEndpoint string = "https://porkbun.com/api/json/v3/dns/editByNameType"
-	IpifyAPIEndpoint   string = "https://api.ipify.org?format=json"
+	PorkbunAPIDNSUpdateEndpoint   string = "https://porkbun.com/api/json/v3/dns/editByNameType"
+	PorkbunAPIDNSRetrieveEndpoint string = "https://porkbun.com/api/json/v3/dns/retrieveByNameType"
+	IpifyAPIEndpoint              string = "https://api.ipify.org?format=json"
 )
 
 type Config struct {
@@ -25,19 +26,37 @@ type Config struct {
 	Type      string `json:"type"`
 }
 
-type RequestPorkbun struct {
+type RequestPorkbunDNSUpdate struct {
 	SecretKey string `json:"secretapikey"`
 	Key       string `json:"apikey"`
 	Ip        string `json:"content"`
 }
 
-type ResponseIpify struct {
-	Ip string `json:"ip"`
-}
-
-type ResponsePorkbun struct {
+type ResponsePorkbunDNSUpdate struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
+}
+
+type RequestPorkbunDNSURetrieve struct {
+	SecretKey string `json:"secretapikey"`
+	Key       string `json:"apikey"`
+}
+
+type ResponsePorkbunDNSURetrieve struct {
+	Status  string `json:"status"`
+	Records []struct {
+		Content  string `json:"content"`
+		Id       string `json:"id"`
+		Name     string `json:"name"`
+		Type     string `json:"type"`
+		Ttl      string `json:"ttl"`
+		Priority string `json:"prio"`
+		Notes    string `json:"notes"`
+	} `json:"records"`
+}
+
+type ResponseIpify struct {
+	Ip string `json:"ip"`
 }
 
 var updateCmd = &cobra.Command{
@@ -68,16 +87,49 @@ func getCurrentIP() (string, error) {
 	return ip.Ip, nil
 }
 
-func updateDNS(c Config) error {
-	var result ResponsePorkbun
-	endpoint := fmt.Sprintf("%s/%s/%s/%s", PorkbunAPIEndpoint, c.Domain, c.Type, c.Subdomain)
+func retrieveDNS(c Config) (string, error) {
+	var result ResponsePorkbunDNSURetrieve
+	endpoint := fmt.Sprintf("%s/%s/%s/%s", PorkbunAPIDNSRetrieveEndpoint, c.Domain, c.Type, c.Subdomain)
 
-	currentIP, err := getCurrentIP()
-	if err != nil {
-		return err
+	payload := RequestPorkbunDNSURetrieve{
+		SecretKey: c.SecretKey,
+		Key:       c.Key,
 	}
 
-	payload := RequestPorkbun{
+	encodedPayload, err := json.Marshal(payload)
+	if err != nil {
+		return "", err
+	}
+
+	req := bytes.NewBuffer(encodedPayload)
+	res, err := http.Post(endpoint, "application/json", req)
+	if err != nil {
+		return "", err
+	}
+
+	defer res.Body.Close()
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return "", err
+	}
+
+	if result.Status == "ERROR" {
+		return "", fmt.Errorf("error retrieving DNS: %s", result.Status)
+	}
+
+	return result.Records[0].Content, nil
+}
+
+func updateDNS(c Config, currentIP string) error {
+	var result ResponsePorkbunDNSUpdate
+	endpoint := fmt.Sprintf("%s/%s/%s/%s", PorkbunAPIDNSUpdateEndpoint, c.Domain, c.Type, c.Subdomain)
+
+	payload := RequestPorkbunDNSUpdate{
 		SecretKey: c.SecretKey,
 		Key:       c.Key,
 		Ip:        currentIP,
@@ -132,7 +184,22 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = updateDNS(config)
+	currentDNSIP, err := retrieveDNS(config)
+	if err != nil {
+		return err
+	}
+
+	currentIP, err := getCurrentIP()
+	if err != nil {
+		return err
+	}
+
+	if currentDNSIP == currentIP {
+		fmt.Println("Current IP is already up to date!")
+		return nil
+	}
+
+	err = updateDNS(config, currentDNSIP)
 	if err != nil {
 		return err
 	}
