@@ -215,7 +215,7 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	err = updateDNS(config, currentDNSIP)
+	err = updateDNS(config, currentIP)
 	if err != nil {
 		return err
 	}
