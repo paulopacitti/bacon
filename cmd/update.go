@@ -26,22 +26,30 @@ type Config struct {
 	Type      string `json:"type"`
 }
 
+// Request body for the DNS Edit Porkbun API endpoint,
+// as defined in the documentation: https://porkbun.com/api/json/v3/documentation
 type RequestPorkbunDNSUpdate struct {
 	SecretKey string `json:"secretapikey"`
 	Key       string `json:"apikey"`
 	Ip        string `json:"content"`
 }
 
+// Response body for the DNS Edit Porkbun API endpoint,
+// as defined in the documentation: https://porkbun.com/api/json/v3/documentation
 type ResponsePorkbunDNSUpdate struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
 }
 
+// Request body for the DNS Retrieve Records Porkbun API endpoint, 
+// as defined in the documentation: https://porkbun.com/api/json/v3/documentation
 type RequestPorkbunDNSURetrieve struct {
 	SecretKey string `json:"secretapikey"`
 	Key       string `json:"apikey"`
 }
 
+// Response body for the DNS Retrieve Records Porkbun API endpoint,
+// as defined in the documentation: https://porkbun.com/api/json/v3/documentation
 type ResponsePorkbunDNSURetrieve struct {
 	Status  string `json:"status"`
 	Records []struct {
@@ -55,6 +63,7 @@ type ResponsePorkbunDNSURetrieve struct {
 	} `json:"records"`
 }
 
+// Response body for the Ipify API endpoint.
 type ResponseIpify struct {
 	Ip string `json:"ip"`
 }
@@ -69,6 +78,8 @@ func init() {
 	rootCmd.AddCommand(updateCmd)
 }
 
+// Retrieves the current IP address using the Ipify API.
+// If an error occurs during the HTTP request or response parsing, it is returned as the second value.
 func getCurrentIP() (string, error) {
 	var ip ResponseIpify
 
@@ -87,6 +98,8 @@ func getCurrentIP() (string, error) {
 	return ip.Ip, nil
 }
 
+// Retrieves the current DNS record from PorkbunAPI for the domain configured in the config file.
+// If an error occurs during the HTTP request or response parsing, it is returned as the second value.
 func retrieveDNS(c Config) (string, error) {
 	var result ResponsePorkbunDNSURetrieve
 	endpoint := fmt.Sprintf("%s/%s/%s/%s", PorkbunAPIDNSRetrieveEndpoint, c.Domain, c.Type, c.Subdomain)
@@ -125,6 +138,8 @@ func retrieveDNS(c Config) (string, error) {
 	return result.Records[0].Content, nil
 }
 
+// Updates the DNS record from PorkbunAPI for the domain configured in the config file.
+// If an error occurs during the HTTP request or response parsing, it is returned as the second value.
 func updateDNS(c Config, currentIP string) error {
 	var result ResponsePorkbunDNSUpdate
 	endpoint := fmt.Sprintf("%s/%s/%s/%s", PorkbunAPIDNSUpdateEndpoint, c.Domain, c.Type, c.Subdomain)
@@ -166,6 +181,7 @@ func updateDNS(c Config, currentIP string) error {
 	return nil
 }
 
+// Run the update command.
 func runUpdate(cmd *cobra.Command, args []string) error {
 	var config Config
 	homeDir := os.Getenv("HOME")
