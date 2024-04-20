@@ -41,7 +41,7 @@ type ResponsePorkbunDNSUpdate struct {
 	Message string `json:"message"`
 }
 
-// Request body for the DNS Retrieve Records Porkbun API endpoint, 
+// Request body for the DNS Retrieve Records Porkbun API endpoint,
 // as defined in the documentation: https://porkbun.com/api/json/v3/documentation
 type RequestPorkbunDNSURetrieve struct {
 	SecretKey string `json:"secretapikey"`
@@ -133,6 +133,10 @@ func retrieveDNS(c Config) (string, error) {
 
 	if result.Status == "ERROR" {
 		return "", fmt.Errorf("error retrieving DNS: %s", result.Status)
+	}
+
+	if len(result.Records) == 0 {
+		return "", fmt.Errorf("no record for subdomain %s.%s with type %s found", c.Subdomain, c.Domain, c.Type)
 	}
 
 	return result.Records[0].Content, nil
