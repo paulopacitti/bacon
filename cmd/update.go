@@ -188,7 +188,7 @@ func updateDNS(c Config, currentIP string) error {
 // Run the update command.
 func runUpdate(cmd *cobra.Command, args []string) error {
 	var config Config
-	homeDir := os.Getenv("HOME")
+	homeDir, _ := os.UserHomeDir()
 	configPath := fmt.Sprintf("%s/%s", homeDir, ".config/bacon")
 
 	viper.SetConfigName("config")
