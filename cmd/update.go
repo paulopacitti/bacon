@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	PorkbunAPIDNSUpdateEndpoint   string = "https://porkbun.com/api/json/v3/dns/editByNameType"
-	PorkbunAPIDNSRetrieveEndpoint string = "https://porkbun.com/api/json/v3/dns/retrieveByNameType"
+	PorkbunAPIDNSUpdateEndpoint   string = "https://api.porkbun.com/api/json/v3/dns/editByNameType"
+	PorkbunAPIDNSRetrieveEndpoint string = "https://api.porkbun.com/api/json/v3/dns/retrieveByNameType"
 	IpifyAPIEndpoint              string = "https://api.ipify.org?format=json"
 )
 
