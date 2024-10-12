@@ -38,7 +38,7 @@ func init() {
 }
 
 func runConfig(cmd *cobra.Command, args []string) {
-	homeDir := os.Getenv("HOME")
+	homeDir, _ := os.UserHomeDir()
 	configPath := fmt.Sprintf("%s/%s", homeDir, ".config/bacon")
 	filePath := fmt.Sprintf("%s/%s", configPath, "config.json")
 	err := os.MkdirAll(configPath, 0700)
